@@ -5,6 +5,8 @@ from typing import Annotated
 
 app = FastAPI()
 
+items_db = []
+
 @app.get("/")
 def home():
     return {"message": "Welcome to the Randomizer API!"}
@@ -38,4 +40,29 @@ def get_random_number_between(
         "min": min_value,
         "max": max_value,
         "random_number": random.randint(min_value, max_value)
+    }
+
+@app.post("/items")
+def add_item(body: dict):
+    item_name = body.get("name")
+    if not item_name:
+        raise HTTPException(status_code=400, detail="'name' field is required")
+    
+    if item_name in items_db:
+        raise HTTPException(status_code=400, detail="Item already exists")
+    
+    items_db.append(item_name)
+    return {
+        "message": "Item added successfully",
+        "item": item_name,
+    }
+
+@app.get("/items")
+def get_randomized_items():
+    randomized = items_db.copy()
+    random.shuffle(randomized)
+    return {
+        "original_order": items_db,
+        "randomized_order": randomized,
+        "count": len(items_db)
     }
